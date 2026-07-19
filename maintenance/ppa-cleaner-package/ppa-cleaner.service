@@ -1,0 +1,18 @@
+[Unit]
+Description=Check and disable dead Ubuntu Launchpad PPAs
+Documentation=file:/usr/local/share/doc/ppa-cleaner/README.md
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/ppa-cleaner clean --apply --policy dead --attempts 3 --jobs 4 --json-report /var/log/ppa-cleaner/latest.json
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+PrivateTmp=true
+ProtectHome=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
