@@ -12,7 +12,7 @@ Write-Output "Checking for Windows Updates..."
 try {
     Import-Module PSWindowsUpdate -ErrorAction Stop
 } catch {
-    Write-Error "PSWindowsUpdate module not found. Install with: Install-Module PSWindowsUpdate"
+    Write-Error "PSWindowsUpdate module not found.\n\nTo install: Install-Module PSWindowsUpdate -Force -Scope CurrentUser\nRun this in an elevated PowerShell window (Run as Administrator)"
     exit 1
 }
 
