@@ -7,7 +7,22 @@ Start-Process cleanmgr /sagerun:1 -NoNewWindow -Wait
 
 # 2. Windows Update Check
 Write-Output "Checking for Windows Updates..."
-Get-WindowsUpdate -Install -AcceptAll -AutoReboot
+
+# Ensure PSWindowsUpdate module is available
+try {
+    Import-Module PSWindowsUpdate -ErrorAction Stop
+} catch {
+    Write-Error "PSWindowsUpdate module not found. Install with: Install-Module PSWindowsUpdate"
+    exit 1
+}
+
+# Get and install updates
+try {
+    Get-WindowsUpdate -Install -AcceptAll -AutoReboot
+} catch {
+    Write-Error "Windows update failed: $_"
+    exit 1
+}
 
 # 3. Disk Defragment (skips SSDs)
 $drives = Get-Volume | Where-Object {
