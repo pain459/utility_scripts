@@ -8,8 +8,39 @@ A collection of cross-platform utility scripts for system maintenance and routin
 
 ## Project Structure
 
-- **Linux/Unix**: Scripts for Ubuntu/Debian system maintenance (ppa-cleaner, install.sh)
+- **Linux/Unix**: Scripts for Ubuntu/Debian system maintenance (`ppa-cleaner`, `install.sh`)
 - **Windows**: PowerShell scripts for Windows maintenance (in `windows_scripts/`)
+
+## Key Components
+
+### ppa-cleaner (Linux/Unix)
+A conservative, standard-library-only Python utility for detecting and disabling broken Ubuntu Launchpad PPAs.
+
+**Key design principles:**
+- Dry-run by default; changes require `--apply`
+- Tests each PPA source independently with `apt-get`
+- Supports both classic `/etc/apt/sources.list` and deb822 `*.sources` formats
+- Classifies failures into three policies:
+  - **dead**: 404, 410, or missing Release files
+  - **broken**: Everything in `dead` plus signature, key, auth, malformed entry, and Signed-By errors
+  - **all**: Every failed result, including transient network errors
+- Creates timestamped backups and a JSON manifest before editing
+- Uses atomic file replacement to prevent corruption
+
+### Windows Maintenance Scripts
+Two PowerShell scripts that run as Administrator:
+
+1. **maintenance.ps1**: Full Windows maintenance
+   - Disk cleanup (cleanmgr)
+   - Windows Update check and install
+   - Disk defragmentation (skips SSDs)
+   - Clear temporary files
+   - System File Checker (SFC)
+   - Execution policy warning
+
+2. **update-choco-packages.ps1**: Chocolatey upgrades
+   - Checks and warns about restricted execution policy
+   - Runs `choco upgrade all -y`
 
 ## Common Commands
 
@@ -94,62 +125,23 @@ sudo ./install.sh --enable-timer
 
 ## Architecture & Big Picture
 
-### ppa-cleaner (Linux)
-
-A conservative, standard-library-only Python utility for detecting and disabling broken Ubuntu Launchpad PPAs.
-
-**Key design principles:**
-- Dry-run by default; changes require `--apply`
-- Tests each PPA independently with `apt-get`
-- Supports both classic `/etc/apt/sources.list` and deb822 `*.sources` formats
-- Classifies failures into three policies:
-  - **dead**: 404, 410, or missing Release files
-  - **broken**: Everything in `dead` plus signature, key, auth, malformed entry, and Signed-By errors
-  - **all**: Every failed result, including transient network errors
-- Creates timestamped backups and a JSON manifest before editing
-- Uses atomic file replacement to prevent corruption
-
-**Command structure:**
-```
-ppa-cleaner [command] [options]
-
-Commands:
-  check      — Test matching active PPAs without changing files
-  clean      — Test PPAs and optionally disable failures (default: --policy dead)
-  backups    — List available cleanup backups
-  restore    — Restore source files from a cleanup backup (e.g., restore latest)
-```
-
-**Backup and restore workflow:**
-- Backups stored under `/var/backups/ppa-cleaner/<UTC timestamp>/`
-- Each backup contains the original files + `manifest.json` with disabled entries
-- `restore` command refuses to overwrite files changed since backup unless `--force` is specified
-
-### Windows Maintenance
-
-Two PowerShell scripts that run as Administrator:
-
-1. **maintenance.ps1**: Full Windows maintenance
-   - Disk cleanup (cleanmgr)
-   - Windows Update check and install
-   - Disk defragmentation (skips SSDs)
-   - Clear temporary files
-   - System File Checker (SFC)
-   - Execution policy warning
-
-2. **update-choco-packages.ps1**: Chocolatey upgrades
-   - Checks and warns about restricted execution policy
-   - Runs `choco upgrade all -y`
-
-**Note**: Windows scripts require `PSWindowsUpdate` module for the update script. If missing:
-```powershell
-Install-Module PSWindowsUpdate -Force -Scope CurrentUser
-```
-
-## Cross-Platform Patterns
+### Cross-Platform Patterns
 
 - **Dry-run first**: All destructive operations have a preview mode
 - **Root/sudo required**: Scripts that modify system state require elevated privileges
 - **Backups before changes**: Changes create timestamped backups with manifest
 - **Parallel processing**: ppa-cleaner supports concurrent checks (`--jobs`)
 - **Exit codes**: ppa-cleaner uses standardized exit codes (0=success, 1=failures found, 2=error, 130=interrupted)
+
+### ppa-cleaner Implementation Details
+
+The `ppa-cleaner.py` script is a single-file Python utility that:
+- Scans APT source files for Launchpad PPAs
+- Tests each PPA using `apt-get update` in isolation
+- Classifies failures into categories (dead, broken, transient)
+- Provides atomic file editing with backup support
+- Supports both traditional `.list` and modern deb822 `.sources` formats
+- Uses thread pools for parallel checking
+- Implements a sophisticated failure classification system
+
+The installation process sets up systemd timer to run weekly automatically.
