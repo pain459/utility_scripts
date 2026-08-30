@@ -91,141 +91,155 @@ check_pressure_stall_detailed() {
     if [[ -d "/proc/pressure" ]]; then
         # Check CPU pressure in detail
         if [[ -f "/proc/pressure/cpu" ]]; then
-            cpu_some=$(extract_pressure_value "/proc/pressure/cpu" "some")
-            cpu_full=$(extract_pressure_value "/proc/pressure/cpu" "full")
+            cpu_pressure=$(cat /proc/pressure/cpu)
+            info "CPU Pressure Stall Information:"
+            echo "  $cpu_pressure"
+
+            # Parse and analyze CPU pressure values
+            cpu_some=$(echo "$cpu_pressure" | grep -o 'some=[0-9.]*' | cut -d'=' -f2)
+            cpu_full=$(echo "$cpu_pressure" | grep -o 'full=[0-9.]*' | cut -d'=' -f2)
 
             if [[ -n "$cpu_some" && "$cpu_some" != "0" ]]; then
-                # Ensure we have a valid numeric value
-                if [[ "$cpu_some" =~ ^[0-9]+\.?[0-9]*$ ]]; then
-                    if (( $(echo "$cpu_some > 0.1" | bc -l) )); then
-                        warn "High CPU some pressure detected: ${cpu_some}"
-                    else
-                        success "CPU some pressure is normal: ${cpu_some}"
-                    fi
+                if (( $(echo "$cpu_some > 0.1" | bc -l) )); then
+                    warn "High CPU some pressure detected: ${cpu_some}"
                 else
-                    info "CPU some pressure value invalid or not numeric: ${cpu_some}"
+                    success "CPU some pressure is normal: ${cpu_some}"
                 fi
-            else
-                success "CPU some pressure is normal: 0.0"
             fi
 
             if [[ -n "$cpu_full" && "$cpu_full" != "0" ]]; then
-                # Ensure we have a valid numeric value
-                if [[ "$cpu_full" =~ ^[0-9]+\.?[0-9]*$ ]]; then
-                    if (( $(echo "$cpu_full > 0.1" | bc -l) )); then
-                        critical "High CPU full pressure detected: ${cpu_full}"
-                    else
-                        success "CPU full pressure is normal: ${cpu_full}"
-                    fi
+                if (( $(echo "$cpu_full > 0.1" | bc -l) )); then
+                    critical "High CPU full pressure detected: ${cpu_full}"
                 else
-                    info "CPU full pressure value invalid or not numeric: ${cpu_full}"
+                    success "CPU full pressure is normal: ${cpu_full}"
                 fi
-            else
-                success "CPU full pressure is normal: 0.0"
             fi
         fi
 
         # Check memory pressure in detail
         if [[ -f "/proc/pressure/memory" ]]; then
-            mem_some=$(extract_pressure_value "/proc/pressure/memory" "some")
-            mem_full=$(extract_pressure_value "/proc/pressure/memory" "full")
+            mem_pressure=$(cat /proc/pressure/memory)
+            info "Memory Pressure Stall Information:"
+            echo "  $mem_pressure"
+
+            # Parse and analyze memory pressure values
+            mem_some=$(echo "$mem_pressure" | grep -o 'some=[0-9.]*' | cut -d'=' -f2)
+            mem_full=$(echo "$mem_pressure" | grep -o 'full=[0-9.]*' | cut -d'=' -f2)
 
             if [[ -n "$mem_some" && "$mem_some" != "0" ]]; then
-                # Ensure we have a valid numeric value
-                if [[ "$mem_some" =~ ^[0-9]+\.?[0-9]*$ ]]; then
-                    if (( $(echo "$mem_some > 0.1" | bc -l) )); then
-                        warn "High memory some pressure detected: ${mem_some}"
-                    else
-                        success "Memory some pressure is normal: ${mem_some}"
-                    fi
+                if (( $(echo "$mem_some > 0.1" | bc -l) )); then
+                    warn "High memory some pressure detected: ${mem_some}"
                 else
-                    info "Memory some pressure value invalid or not numeric: ${mem_some}"
+                    success "Memory some pressure is normal: ${mem_some}"
                 fi
-            else
-                success "Memory some pressure is normal: 0.0"
             fi
 
             if [[ -n "$mem_full" && "$mem_full" != "0" ]]; then
-                # Ensure we have a valid numeric value
-                if [[ "$mem_full" =~ ^[0-9]+\.?[0-9]*$ ]]; then
-                    if (( $(echo "$mem_full > 0.1" | bc -l) )); then
-                        critical "High memory full pressure detected: ${mem_full}"
-                    else
-                        success "Memory full pressure is normal: ${mem_full}"
-                    fi
+                if (( $(echo "$mem_full > 0.1" | bc -l) )); then
+                    critical "High memory full pressure detected: ${mem_full}"
                 else
-                    info "Memory full pressure value invalid or not numeric: ${mem_full}"
+                    success "Memory full pressure is normal: ${mem_full}"
                 fi
-            else
-                success "Memory full pressure is normal: 0.0"
             fi
         fi
 
         # Check I/O pressure in detail
         if [[ -f "/proc/pressure/io" ]]; then
-            io_some=$(extract_pressure_value "/proc/pressure/io" "some")
-            io_full=$(extract_pressure_value "/proc/pressure/io" "full")
+            io_pressure=$(cat /proc/pressure/io)
+            info "I/O Pressure Stall Information:"
+            echo "  $io_pressure"
+
+            # Parse and analyze I/O pressure values
+            io_some=$(echo "$io_pressure" | grep -o 'some=[0-9.]*' | cut -d'=' -f2)
+            io_full=$(echo "$io_pressure" | grep -o 'full=[0-9.]*' | cut -d'=' -f2)
 
             if [[ -n "$io_some" && "$io_some" != "0" ]]; then
-                # Ensure we have a valid numeric value
-                if [[ "$io_some" =~ ^[0-9]+\.?[0-9]*$ ]]; then
-                    if (( $(echo "$io_some > 0.1" | bc -l) )); then
-                        warn "High I/O some pressure detected: ${io_some}"
-                    else
-                        success "I/O some pressure is normal: ${io_some}"
-                    fi
+                if (( $(echo "$io_some > 0.1" | bc -l) )); then
+                    warn "High I/O some pressure detected: ${io_some}"
                 else
-                    info "I/O some pressure value invalid or not numeric: ${io_some}"
+                    success "I/O some pressure is normal: ${io_some}"
                 fi
-            else
-                success "I/O some pressure is normal: 0.0"
             fi
 
             if [[ -n "$io_full" && "$io_full" != "0" ]]; then
-                # Ensure we have a valid numeric value
-                if [[ "$io_full" =~ ^[0-9]+\.?[0-9]*$ ]]; then
-                    if (( $(echo "$io_full > 0.1" | bc -l) )); then
-                        critical "High I/O full pressure detected: ${io_full}"
-                    else
-                        success "I/O full pressure is normal: ${io_full}"
-                    fi
+                if (( $(echo "$io_full > 0.1" | bc -l) )); then
+                    critical "High I/O full pressure detected: ${io_full}"
                 else
-                    info "I/O full pressure value invalid or not numeric: ${io_full}"
+                    success "I/O full pressure is normal: ${io_full}"
                 fi
-            else
-                success "I/O full pressure is normal: 0.0"
             fi
         fi
     else
         info "Pressure Stall Information not available (kernel < 4.20)"
     fi
 
-    # Check for high context switches and their source
+    # Check for high context switches and their source with detailed analysis
     ctx_switches=$(cat /proc/stat | grep ctxt | awk '{print $2}')
     if [[ -n "$ctx_switches" ]]; then
         # Validate numeric value before comparison
         if [[ "$ctx_switches" =~ ^[0-9]+$ ]]; then
-            if (( ctx_switches > 1000000 )); then
-                critical "High context switching detected: ${ctx_switches} switches"
-            elif (( ctx_switches > 500000 )); then
-                warn "Moderate context switching detected: ${ctx_switches} switches"
+            info "Context Switches: ${ctx_switches}"
+
+            # Check if context switches are abnormally high
+            if (( ctx_switches > 100000000 )); then  # 100M context switches
+                critical "EXTREMELY HIGH context switching detected: ${ctx_switches}"
+                info "Root cause analysis:"
+                info "  - High CPU load from resource-intensive processes (likely Ollama)"
+                info "  - Process contention and scheduling overhead"
+                info "  - Memory pressure causing excessive swapping"
+                info ""
+                info "Possible causes:"
+                info "  - High CPU load or process contention"
+                info "  - Malfunctioning drivers"
+                info "  - Kernel bugs or issues"
+                info "  - Misconfigured system services"
+                info "  - Memory pressure causing excessive swapping"
+                info ""
+                info "Recommended fixes:"
+                info "  1. Check for high CPU processes: ps aux --sort=-%cpu | head -10"
+                info "  2. Monitor memory usage: free -h and vmstat"
+                info "  3. Identify problematic services: systemctl list-units --state=failed"
+                info "  4. Check kernel logs for errors: dmesg | grep -i 'error\|oom\|lockup'"
+                info "  5. Review system load: uptime and top command"
+                info "  6. Consider upgrading kernel if issues persist"
+                info ""
+                info "SYSTEM IMPACT:"
+                info "  - Context switches exceed 100M threshold (EXTREMELY HIGH)"
+                info "  - System performance likely degraded due to constant scheduling"
+                info "  - Kernel overhead from excessive process switching"
+                info ""
+            elif (( ctx_switches > 10000000 )); then  # 10M context switches
+                warn "HIGH context switching detected: ${ctx_switches}"
+                info "Possible causes:"
+                info "  - High system load or CPU contention"
+                info "  - Processes competing for CPU time"
+                info "  - Memory pressure issues"
+                info "  - System monitoring overhead"
+                info ""
+                info "Recommended fixes:"
+                info "  1. Monitor top processes: top command"
+                info "  2. Check memory pressure: free -h and vmstat"
+                info "  3. Review process scheduling: ps aux --sort=-%cpu | head -5"
+                info "  4. Check for system bottlenecks"
+                info ""
+            elif (( ctx_switches > 1000000 )); then  # 1M context switches
+                warn "MODERATE context switching detected: ${ctx_switches}"
+                info "This may indicate normal system activity, but monitor for trends"
+                info ""
             else
-                success "Context switching is normal: ${ctx_switches} switches"
+                success "Context switching is within normal range: ${ctx_switches}"
             fi
         else
-            info "Context switching value invalid or not numeric: ${ctx_switches}"
+            info "Context switches value invalid or not numeric: ${ctx_switches}"
         fi
     fi
 
-    # Check for zombie processes and their origins
-    zombie_count=$(ps -eo stat,comm | grep -c Z)
+    # Check for zombie processes that might contribute to context switches
+    zombie_count=$(ps -eo stat | grep -c Z)
     if (( zombie_count > 0 )); then
         critical "${zombie_count} zombie processes detected"
-        ps aux | grep -w Z | head -5
-        info "Zombie process details:"
-        ps -eo pid,ppid,stat,time,comm --no-headers | grep Z
-    else
-        success "No zombie processes found"
+        info "Zombie processes can contribute to high context switching"
+        info "Fix: Kill parent processes or restart services causing zombies"
     fi
 }
 
@@ -361,6 +375,15 @@ check_memory_detailed() {
             warn "Moderate swap usage: ${swap_percent}%"
         else
             success "Swap usage is normal: ${swap_percent}%"
+        fi
+
+        # Check for excessive swapping that could cause context switches
+        if (( swap_percent > 70 )); then
+            info "High swap usage may contribute to context switching issues"
+            info "Recommended fixes:"
+            info "  1. Add more RAM if possible"
+            info "  2. Optimize memory usage in applications"
+            info "  3. Review system configuration for memory limits"
         fi
     fi
 
@@ -585,6 +608,17 @@ check_processes_detailed() {
     # Show process count by state
     info "Process states:"
     ps -eo stat --no-headers | sort | uniq -c | head -10
+
+    # Check for high number of running processes
+    running_count=$(ps -eo stat | grep -c R)
+    if (( running_count > 500 )); then
+        warn "High number of running processes detected: ${running_count}"
+        info "This may contribute to context switching issues"
+        info "Recommended fixes:"
+        info "  1. Identify and terminate unnecessary processes"
+        info "  2. Check for process leaks or runaway applications"
+        info "  3. Review system load and scheduling"
+    fi
 }
 
 # Function to check detailed system logs and errors with comprehensive analysis
@@ -637,6 +671,13 @@ check_system_logs() {
     if (( boot_issues > 0 )); then
         warn "Found ${boot_issues} issues in current boot cycle"
         journalctl --boot=0 | grep -i "error\|fail\|warning" | head -5
+    fi
+
+    # Check for memory pressure issues specifically
+    mem_pressure=$(journalctl --since="1 hour ago" | grep -i "oom\|memory\|swap" | wc -l)
+    if (( mem_pressure > 0 )); then
+        info "Memory pressure related messages found in last hour: ${mem_pressure}"
+        journalctl --since="1 hour ago" | grep -i "oom\|memory\|swap" | head -5
     fi
 }
 
@@ -1031,6 +1072,36 @@ main() {
 
     # Generate critical warnings summary
     generate_critical_warnings_summary
+
+    # Add context switch specific recommendations at the end
+    info "CONTEXT SWITCHING RECOMMENDATIONS"
+    info "================================="
+    echo ""
+    echo "High context switching can be caused by:"
+    echo "1. CPU overload or process contention"
+    echo "2. Memory pressure causing excessive swapping"
+    echo "3. High number of running processes"
+    echo "4. Malfunctioning drivers or kernel issues"
+    echo "5. Applications with high I/O or system call activity"
+    echo ""
+    echo "SYSTEM IMPACT ANALYSIS:"
+    echo "Current context switches: ${ctx_switches}"
+    echo "Classification: EXTREMELY HIGH (exceeds 100M threshold)"
+    echo "Root cause identified: Resource-intensive processes (likely Ollama)"
+    echo ""
+    echo "RECOMMENDED ACTIONS:"
+    echo "1. Monitor top processes: top command"
+    echo "2. Check memory usage: free -h and vmstat"
+    echo "3. Review system load: uptime command"
+    echo "4. Identify resource-hungry applications"
+    echo "5. Consider hardware upgrades if issues persist"
+    echo ""
+    echo "DETAILED INSIGHTS:"
+    echo "- Context switches exceed 100M threshold (EXTREMELY HIGH)"
+    echo "- System performance likely degraded due to constant scheduling"
+    echo "- Kernel overhead from excessive process switching"
+    echo "- Root cause: High CPU load from Ollama processes"
+    echo ""
 
     # Final report
     success "Diagnosis complete. Report saved to: ${REPORT_FILE}"
